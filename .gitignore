@@ -43,5 +43,4 @@ node_modules/
 
 ### DB ###
 */db/*
-
-
+apps/db/
