@@ -1,0 +1,103 @@
+{
+  "documentInfo": {
+    "title": "Fusenエラー一覧",
+    "errorResponseFormat": {
+      "type": "object",
+      "properties": {
+        "errorCode": {
+          "type": "string",
+          "description": "Application-specific error code. See definitions below."
+        },
+        "message": {
+          "type": "string",
+          "description": "A human-readable error message."
+        }
+      },
+      "required": [
+        "errorCode",
+        "message"
+      ]
+    }
+  },
+  "commonErrors": [
+    {
+      "errorCode": "INTERNAL_SERVER_ERROR",
+      "httpStatusCode": 500,
+      "messageExample": "サーバー内部で予期せぬエラーが発生しました。",
+      "description": "サーバーエラー。"
+    },
+    {
+      "errorCode": "BAD_REQUEST",
+      "httpStatusCode": 400,
+      "messageExample": "リクエストが不正です。",
+      "description": "クライアントエラー。"
+    }
+  ],
+  "apiEndpoints": {
+    "POST /api/v1/bookmarks": {
+      "summary": "Create a new bookmark",
+      "specificErrors": [
+        {
+          "errorCode": "INVALID_URL",
+          "httpStatusCode": 400,
+          "messageExample": "http:// または https:// で始まるURLを入力してください。",
+          "description": "リクエストボディに含まれる 'url' フィールドの値が、有効なURL形式（http:// または https:// で始まる）でない場合に返却されます。"
+        },
+        {
+          "errorCode": "DUPLICATE_URL",
+          "httpStatusCode": 409,
+          "messageExample": "指定されたURLは既に登録されています。",
+          "description": "リクエストボディに含まれる 'url' フィールドの値が、既にシステムに登録されているURLと重複する場合に返却されます。"
+        }
+      ],
+      "notes": "上記のエラーに加え、『commonErrors』セクションに定義された共通エラーが発生する可能性があります。"
+    },
+    "GET /api/v1/bookmarks": {
+      "summary": "List all bookmarks",
+      "specificErrors": [],
+      "notes": "『commonErrors』セクションに定義された共通エラーが発生する可能性があります。（例: クエリパラメータの型不正などによるBAD_REQUEST）"
+    },
+    "GET /api/v1/bookmarks/{id}": {
+      "summary": "Get a specific bookmark by ID",
+      "specificErrors": [
+        {
+          "errorCode": "BOOKMARK_NOT_FOUND",
+          "httpStatusCode": 404,
+          "messageExample": "指定されたブックマークは見つかりませんでした。",
+          "description": "パスパラメータで指定された 'id' に対応するブックマークがシステムに存在しない場合に返却されます。"
+        }
+      ],
+      "notes": "上記のエラーに加え、『commonErrors』セクションに定義された共通エラーが発生する可能性があります。"
+    },
+    "PUT /api/v1/bookmarks/{id}": {
+      "summary": "Update an existing bookmark",
+      "specificErrors": [
+        {
+          "errorCode": "BOOKMARK_NOT_FOUND",
+          "httpStatusCode": 404,
+          "messageExample": "指定されたブックマークは見つかりませんでした。",
+          "description": "パスパラメータで指定された 'id' に対応するブックマークがシステムに存在しない場合に返却されます。"
+        },
+        {
+          "errorCode": "INVALID_URL",
+          "httpStatusCode": 400,
+          "messageExample": "http:// または https:// で始まるURLを入力してください。",
+          "description": "リクエストボディに含まれる 'url' フィールドの値が、有効なURL形式（http:// または https:// で始まる）でない場合に返却されます。"
+        }
+      ],
+      "notes": "上記のエラーに加え、『commonErrors』セクションに定義された共通エラーが発生する可能性があります。"
+    },
+    "DELETE /api/v1/bookmarks/{id}": {
+      "summary": "Delete a bookmark",
+      "specificErrors": [
+        {
+          "errorCode": "BOOKMARK_NOT_FOUND",
+          "httpStatusCode": 404,
+          "messageExample": "指定されたブックマークは見つかりませんでした。",
+          "description": "パスパラメータで指定された 'id' に対応するブックマークがシステムに存在しない場合に返却されます。"
+        }
+      ],
+      "notes": "上記のエラーに加え、『commonErrors』セクションに定義された共通エラーが発生する可能性があります。"
+    }
+  }
+}

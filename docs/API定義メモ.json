@@ -1,0 +1,434 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Fusen API",
+    "version": "v1",
+    "description": "API for managing bookmarks.\nThe primary purpose of developing this application is to learn backend development skills,\ndesign scalable applications, and gain experience for a future transition to a microservices architecture.\nThe initial target users are the developers themselves for personal use."
+  },
+  "servers": [
+    {
+      "url": "/api/v1",
+      "description": "Main API server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Bookmarks",
+      "description": "Operations related to bookmarks"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "BookmarkInput": {
+        "type": "object",
+        "required": [
+          "url"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "The URL of the bookmark. Must start with http:// or https://.",
+            "example": "https://www.example.com"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the bookmark. If not provided, it will be extracted from the <title> tag of the URL.",
+            "example": "Example Domain"
+          },
+          "description": {
+            "type": "string",
+            "description": "A memo for the bookmark.",
+            "example": "This is a useful website."
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Tags associated with the bookmark. Users can input freely.",
+            "example": [
+              "tech",
+              "web"
+            ]
+          }
+        }
+      },
+      "BookmarkResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The unique identifier for the bookmark.",
+            "example": 1
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "The URL of the bookmark.",
+            "example": "https://www.example.com"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true,
+            "description": "The title of the bookmark.",
+            "example": "Example Domain"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "A memo for the bookmark.",
+            "example": "This is a useful website."
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Tags associated with the bookmark.",
+            "example": [
+              "tech",
+              "web"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date and time when the bookmark was created (ISO 8601).",
+            "example": "2024-05-30T10:30:00Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date and time when the bookmark was last updated (ISO 8601).",
+            "example": "2024-05-30T11:00:00Z"
+          }
+        }
+      },
+      "Tag": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The unique identifier for the tag."
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the tag.",
+            "example": "programming"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date and time when the tag was created (ISO 8601)."
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date and time when the tag was last updated (ISO 8601)."
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": [
+          "errorCode",
+          "message"
+        ],
+        "properties": {
+          "errorCode": {
+            "type": "string",
+            "description": "Application-specific error code.",
+            "example": "INVALID_URL"
+          },
+          "message": {
+            "type": "string",
+            "description": "A human-readable error message.",
+            "example": "The provided URL is not valid."
+          }
+        }
+      }
+    },
+    "parameters": {
+      "bookmarkId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "description": "The ID of the bookmark.",
+        "schema": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "limitParam": {
+        "name": "limit",
+        "in": "query",
+        "description": "Number of bookmarks to retrieve. Default is 10.",
+        "schema": {
+          "type": "integer",
+          "default": 10
+        }
+      },
+      "offsetParam": {
+        "name": "offset",
+        "in": "query",
+        "description": "Starting position for retrieving bookmarks. Default is 0.",
+        "schema": {
+          "type": "integer",
+          "default": 0
+        }
+      }
+    }
+  },
+  "paths": {
+    "/bookmarks": {
+      "post": {
+        "tags": [
+          "Bookmarks"
+        ],
+        "summary": "Create a new bookmark",
+        "description": "Registers a new bookmark in the system.",
+        "operationId": "createBookmark",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookmarkInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Bookmark created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookmarkResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input, e.g., URL format error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Bookmarks"
+        ],
+        "summary": "List all bookmarks",
+        "description": "Retrieves a list of registered bookmarks with lazy loading.",
+        "operationId": "listBookmarks",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/limitParam"
+          },
+          {
+            "$ref": "#/components/parameters/offsetParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of bookmarks.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BookmarkResponse"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bookmarks/{id}": {
+      "get": {
+        "tags": [
+          "Bookmarks"
+        ],
+        "summary": "Get a specific bookmark by ID",
+        "description": "Retrieves a single bookmark by its unique identifier.",
+        "operationId": "getBookmarkById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/bookmarkId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the bookmark.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookmarkResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bookmark not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errorCode": "BOOKMARK_NOT_FOUND",
+                  "message": "The bookmark with the specified ID was not found."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Bookmarks"
+        ],
+        "summary": "Update an existing bookmark",
+        "description": "Modifies the information of an existing bookmark.",
+        "operationId": "updateBookmark",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/bookmarkId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookmarkInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Bookmark updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookmarkResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input, e.g., URL format error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bookmark not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Bookmarks"
+        ],
+        "summary": "Delete a bookmark",
+        "description": "Removes a bookmark from the system.",
+        "operationId": "deleteBookmark",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/bookmarkId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Bookmark deleted successfully. No content."
+          },
+          "404": {
+            "description": "Bookmark not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
