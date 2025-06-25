@@ -5,13 +5,13 @@ FROM maven:3.9-amazoncorretto-21 AS builder
 WORKDIR /app
 
 # Copy the Maven project files (pom.xml)
-COPY apps/backend/pom.xml ./
+COPY backend/pom.xml ./
 
 # Download dependencies (this will be cached)
 RUN mvn dependency:go-offline
 
 # Copy the rest of the application code
-COPY apps/backend/src ./src
+COPY backend/src ./src
 
 # Build the application
 RUN mvn package -DskipTests

@@ -1,4 +1,29 @@
+x-template: &flyway-template
+  image: flyway/flyway:10
+  volumes:
+    - ./db/migrations:/flyway/migrations
+    - ./db/flyway.conf:/flyway/flyway.conf
+  depends_on:
+    - db
+  networks:
+    - fusen-network
+
 services:
+  flyway-clean:
+    <<: *flyway-template
+    command: clean
+
+  flyway-migrate:
+    <<: *flyway-template
+    command: migrate
+
+  flyway-info:
+    <<: *flyway-template
+    command: info
+
+  flyway-repair:
+    <<: *flyway-template
+    command: repair
   db:
     image: mysql:8.0
     environment:
@@ -8,9 +33,7 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - ./db/initdb.d:/docker-entrypoint-initdb.d
       - ./db/data:/var/lib/mysql
-      - ./db/my.cnf:/etc/mysql/conf.d/my.cnf
     networks:
       - fusen-network
     command: --default-authentication-plugin=mysql_native_password
@@ -19,7 +42,7 @@ services:
     links:
       - db
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
