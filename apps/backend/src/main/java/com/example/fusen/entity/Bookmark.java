@@ -45,4 +45,12 @@ public class Bookmark {
 
   @Column(name = "updated_at")
   private LocalDateTime updatedAt;
+
+  public void updateFromRequest(String url, String title, String description, Set<Tag> tags) {
+    this.url = url;
+    this.title = title;
+    this.description = description;
+    this.tags = tags;
+    this.updatedAt = LocalDateTime.now();
+  }
 }
