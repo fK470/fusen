@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.example.fusen.exception.BookmarkNotFoundException;
 import com.example.fusen.exception.DuplicateUrlException;
+import com.example.fusen.exception.InvalidUrlException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
