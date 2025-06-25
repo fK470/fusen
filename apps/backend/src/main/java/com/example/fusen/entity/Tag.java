@@ -33,4 +33,10 @@ public class Tag {
 
   @Column(name = "updated_at")
   private LocalDateTime updatedAt;
+
+  public Tag(String name) {
+    this.name = name;
+    this.createdAt = LocalDateTime.now();
+    this.updatedAt = LocalDateTime.now();
+  }
 }
