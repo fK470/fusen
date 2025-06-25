@@ -19,6 +19,7 @@ import com.example.fusen.entity.Bookmark;
 import com.example.fusen.entity.Tag;
 import com.example.fusen.exception.BookmarkNotFoundException;
 import com.example.fusen.exception.DuplicateUrlException;
+import com.example.fusen.exception.InvalidUrlException;
 
 @Service
 @Transactional
