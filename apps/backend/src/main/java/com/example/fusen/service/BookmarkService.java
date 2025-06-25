@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.fusen.dao.BookmarkDao;
+import com.example.fusen.dao.BookmarkTagDao;
 import com.example.fusen.dao.TagDao;
 import com.example.fusen.entity.Bookmark;
 import com.example.fusen.entity.Tag;
@@ -27,21 +28,33 @@ public class BookmarkService {
 
   private final BookmarkDao bookmarkRepository;
   private final TagDao tagRepository;
+  private final BookmarkTagDao bookmarkTagRepository;
 
   @Autowired
-  public BookmarkService(BookmarkDao bookmarkRepository, TagDao tagRepository) {
+  public BookmarkService(BookmarkDao bookmarkRepository, TagDao tagRepository, BookmarkTagDao bookmarkTagRepository) {
     this.bookmarkRepository = bookmarkRepository;
     this.tagRepository = tagRepository;
+    this.bookmarkTagRepository = bookmarkTagRepository;
   }
 
   public List<Bookmark> findAll(int limit, int offset) {
     SelectOptions options = SelectOptions.get().limit(limit).offset(offset);
-    return bookmarkRepository.findAll(options);
+    List<Bookmark> bookmarks = bookmarkRepository.findAll(options);
+    // Load tags for each bookmark
+    for (Bookmark bookmark : bookmarks) {
+      List<Tag> tags = bookmarkTagRepository.findTagsByBookmarkId(bookmark.getId());
+      bookmark.setTags(new HashSet<>(tags));
+    }
+    return bookmarks;
   }
 
   public Bookmark findById(Long id) {
-    return bookmarkRepository.findById(id)
+    Bookmark bookmark = bookmarkRepository.findById(id)
         .orElseThrow(() -> new BookmarkNotFoundException("Bookmark not found with id: " + id));
+    // Load tags for the bookmark
+    List<Tag> tags = bookmarkTagRepository.findTagsByBookmarkId(bookmark.getId());
+    bookmark.setTags(new HashSet<>(tags));
+    return bookmark;
   }
 
   public Bookmark create(Bookmark bookmark) {
@@ -52,6 +65,9 @@ public class BookmarkService {
     Set<Tag> managedTags = getOrCreateTags(bookmark.getTags());
     bookmark.setTags(managedTags);
     bookmarkRepository.insert(bookmark);
+    
+    // Save bookmark-tag relationships
+    saveBookmarkTagRelationships(bookmark.getId(), managedTags);
     return bookmark;
   }
 
@@ -70,12 +86,18 @@ public class BookmarkService {
     Set<Tag> managedTags = getOrCreateTags(bookmark.getTags());
     bookmark.setTags(managedTags);
     bookmarkRepository.update(bookmark);
+    
+    // Update bookmark-tag relationships
+    bookmarkTagRepository.deleteByBookmarkId(bookmark.getId());
+    saveBookmarkTagRelationships(bookmark.getId(), managedTags);
     return bookmark;
   }
 
   public void delete(Long id) {
     Bookmark bookmark = bookmarkRepository.findById(id)
         .orElseThrow(() -> new BookmarkNotFoundException("Bookmark not found with id: " + id));
+    // Delete bookmark-tag relationships first
+    bookmarkTagRepository.deleteByBookmarkId(id);
     bookmarkRepository.delete(bookmark);
   }
 
@@ -104,5 +126,13 @@ public class BookmarkService {
       }
     }
     return managedTags;
+  }
+
+  private void saveBookmarkTagRelationships(Long bookmarkId, Set<Tag> tags) {
+    for (Tag tag : tags) {
+      if (tag.getId() != null) {
+        bookmarkTagRepository.insertBookmarkTag(bookmarkId, tag.getId());
+      }
+    }
   }
 }
