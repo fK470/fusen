@@ -34,15 +34,11 @@ graph TB
 graph TB
     subgraph "インターネット"
         USER[👤 個人ユーザー]
-        DOMAIN_FRONT[fusen-app.vercel.app]
-        DOMAIN_API[*.amazonaws.com]
     end
     
     subgraph "Vercel (フロントエンド) - 無料プラン"
-        subgraph "Vercel Platform"
-            VERCEL_BUILD[自動ビルド & デプロイ]
-            VERCEL_APP[React SPA]
-        end
+        VERCEL_APP[React SPA]
+        VERCEL_BUILD[自動ビルド & デプロイ]
     end
     
     subgraph "AWS (バックエンド) - 最小構成"
@@ -58,7 +54,7 @@ graph TB
         
         subgraph "Security & Monitoring"
             SG[Security Groups]
-            CW[CloudWatch Logs (基本)]
+            CW[CloudWatch Logs 基本]
         end
     end
     
@@ -69,26 +65,16 @@ graph TB
     end
     
     %% User Flow
-    USER --> DOMAIN_FRONT
-    USER --> DOMAIN_API
+    USER --> VERCEL_APP
+    VERCEL_APP -.->|HTTPS API Calls| ECS_TASK
     
     %% Frontend Flow
-    DOMAIN_FRONT --> VERCEL_CDN
-    VERCEL_CDN --> VERCEL_APP
     GITHUB --> VERCEL_BUILD
     VERCEL_BUILD --> VERCEL_APP
     
     %% Backend Flow
-    DOMAIN_API --> DNS
-    DNS --> ALB
-    ALB --> ECS_SERVICE
-    ECS_SERVICE --> ECS_TASK1
-    ECS_SERVICE --> ECS_TASK2
-    ECS_TASK1 --> RDS
-    ECS_TASK2 --> RDS
-    
-    %% API Communication
-    VERCEL_APP -.->|HTTPS API Calls| ALB
+    ECS_SERVICE --> ECS_TASK
+    ECS_TASK --> RDS
     
     %% CI/CD Flow
     GITHUB --> GITHUB_ACTIONS
@@ -96,80 +82,60 @@ graph TB
     ECR --> ECS_SERVICE
     
     %% Security & Config
-    SSM --> ECS_TASK1
-    SSM --> ECS_TASK2
-    SG --> ALB
     SG --> ECS_SERVICE
     SG --> RDS
-    CW --> ECS_TASK1
-    CW --> ECS_TASK2
+    CW --> ECS_TASK
     RDS --> RDS_BACKUP
 ```
 
-## 3. データフロー図
+## 3. データフロー図（個人利用構成）
 
 ```mermaid
 sequenceDiagram
     participant U as ユーザー
-    participant V as Vercel (React)
-    participant CF as CloudFront/CDN
-    participant ALB as AWS ALB
+    participant V as Vercel React
     participant ECS as ECS Fargate
     participant RDS as RDS MySQL
     
     Note over U,RDS: ページ初回ロード
-    U->>+V: https://fusen-app.com アクセス
-    V->>+CF: 静的ファイル配信
-    CF-->>-U: React SPA配信
+    U->>+V: https://fusen-app.vercel.app アクセス
+    V-->>-U: React SPA配信
     
     Note over U,RDS: API呼び出し（ブックマーク一覧取得）
     U->>+V: ブックマーク一覧要求
-    V->>+ALB: GET /api/v1/bookmarks
-    ALB->>+ECS: リクエスト転送
+    V->>+ECS: GET /api/v1/bookmarks
     ECS->>+RDS: SELECT * FROM bookmarks
     RDS-->>-ECS: ブックマークデータ
-    ECS-->>-ALB: JSON レスポンス
-    ALB-->>-V: HTTP 200 + JSON
+    ECS-->>-V: HTTP 200 + JSON
     V-->>-U: ブックマーク一覧表示
     
     Note over U,RDS: 新規ブックマーク作成
     U->>+V: 新規作成フォーム送信
-    V->>+ALB: POST /api/v1/bookmarks
-    ALB->>+ECS: リクエスト転送
+    V->>+ECS: POST /api/v1/bookmarks
     ECS->>+RDS: INSERT INTO bookmarks
     RDS-->>-ECS: 作成完了
-    ECS-->>-ALB: HTTP 201 + JSON
-    ALB-->>-V: 作成成功
+    ECS-->>-V: HTTP 201 + JSON
     V-->>-U: 成功メッセージ + リスト更新
 ```
 
-## 4. セキュリティ構成
+## 4. セキュリティ構成（個人利用向け簡略版）
 
 ```mermaid
 graph TB
     subgraph "セキュリティ層"
         subgraph "Vercel Security"
-            VERCEL_WAF[Web Application Firewall]
             VERCEL_DDoS[DDoS Protection]
             VERCEL_SSL[Auto SSL/HTTPS]
         end
         
         subgraph "AWS Security"
-            WAF[AWS WAF]
-            SHIELD[AWS Shield]
-            
             subgraph "Network Security"
-                VPC[VPC + Private Subnets]
-                SG_ALB[ALB Security Group<br/>Port 80,443 from Internet]
-                SG_ECS[ECS Security Group<br/>Port 8080 from ALB only]
+                SG_ECS[ECS Security Group<br/>Port 8080 from Internet]
                 SG_RDS[RDS Security Group<br/>Port 3306 from ECS only]
-                NACL[Network ACLs]
             end
             
             subgraph "Data Security"
                 RDS_ENCRYPT[RDS Encryption at Rest]
-                RDS_TLS[TLS in Transit]
-                SSM_ENCRYPT[Parameter Store Encryption]
             end
             
             subgraph "Access Control"
@@ -181,16 +147,9 @@ graph TB
     end
     
     %% Security Flow
-    VERCEL_WAF --> WAF
-    VERCEL_DDoS --> SHIELD
-    VERCEL_SSL --> VPC
-    
-    SG_ALB --> SG_ECS
     SG_ECS --> SG_RDS
-    
     IAM --> ECS_TASK_ROLE
     IAM --> ECS_EXEC_ROLE
-    ECS_TASK_ROLE --> SSM_ENCRYPT
     ECS_EXEC_ROLE --> RDS_ENCRYPT
 ```
 
@@ -260,7 +219,7 @@ graph LR
     subgraph "検証"
         VERCEL_DEPLOY --> HEALTH_CHECK[ヘルスチェック]
         ECS_DEPLOY --> HEALTH_CHECK
-        HEALTH_CHECK --> NOTIFICATION[Slack 通知]
+        HEALTH_CHECK --> NOTIFICATION[メール通知]
     end
 ```
 
