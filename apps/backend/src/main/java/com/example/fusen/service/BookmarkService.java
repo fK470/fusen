@@ -73,9 +73,9 @@ public class BookmarkService {
   }
 
   public void delete(Long id) {
-    if (bookmarkRepository.findById(id).isEmpty()) {
-      throw new BookmarkNotFoundException("Bookmark not found with id: " + id);
-    }
+    Bookmark bookmark = bookmarkRepository.findById(id)
+        .orElseThrow(() -> new BookmarkNotFoundException("Bookmark not found with id: " + id));
+    bookmarkRepository.delete(bookmark);
   }
 
   public Set<Tag> convertTags(List<String> tagNames) {
