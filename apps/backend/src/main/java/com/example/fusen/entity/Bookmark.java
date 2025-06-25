@@ -10,6 +10,7 @@ import org.seasar.doma.GeneratedValue;
 import org.seasar.doma.GenerationType;
 import org.seasar.doma.Id;
 import org.seasar.doma.Table;
+import org.seasar.doma.Transient;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,7 +37,7 @@ public class Bookmark {
   @Column(name = "description")
   private String description;
 
-  @Column(name = "tags")
+  @Transient
   @Builder.Default
   private Set<Tag> tags = new HashSet<>();
 
