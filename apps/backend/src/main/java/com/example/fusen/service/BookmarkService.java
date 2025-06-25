@@ -80,7 +80,13 @@ public class BookmarkService {
   }
 
   public Set<Tag> convertTags(List<String> tagNames) {
-    return tagNames.stream().map(Tag::new).collect(Collectors.toSet());
+    if (tagNames == null || tagNames.isEmpty()) {
+      return new HashSet<>();
+    }
+    return tagNames.stream()
+        .filter(name -> name != null && !name.trim().isEmpty())
+        .map(Tag::new)
+        .collect(Collectors.toSet());
   }
 
   private void validateUrl(String url) {
