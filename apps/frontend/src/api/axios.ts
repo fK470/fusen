@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://mock.echoapi.com/mock/3ddd7080b35017';
+const API_BASE_URL = '/api/v1';
 
 import { type ErrorResponse } from './types';
 
